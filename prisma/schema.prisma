@@ -1,0 +1,260 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String    @unique
+  name          String?
+  password      String?
+  avatar        String?
+  role          String    @default("USER") // USER, VENDOR, ADMIN, SUPER_ADMIN
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLogin     DateTime?
+  
+  // Relations
+  bookings      Booking[]
+  reviews       Review[]
+  wishlists     Wishlist[]
+  notifications Notification[]
+  chats         Chat[]
+  messages      Message[]
+  
+  @@index([phone])
+  @@index([email])
+}
+
+model Vendor {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String?
+  about            String?
+  location         String
+  address          String?
+  city             String
+  rating           Float    @default(0)
+  totalReviews     Int      @default(0)
+  priceRange       String?  // e.g., "Rs. 450,000"
+  minPrice         Float?
+  maxPrice         Float?
+  imageUrl         String
+  coverImage       String?
+  isVerified       Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
+  respondsQuickly  Boolean  @default(false)
+  phone            String
+  email            String?
+  website          String?
+  instagram        String?
+  facebook         String?
+  
+  // Store JSON as text for SQLite
+  features         String   @default("[]") // JSON string array
+  gallery          String   @default("[]") // JSON string array
+  workingHours     String?  // JSON object as string
+  details          String?  // JSON object as string
+  
+  // Relations
+  categories       VendorCategory[]
+  packages         Package[]
+  addons           Addon[]
+  reviews          Review[]
+  bookings         Booking[]
+  wishlists        Wishlist[]
+  chats            Chat[]
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  verifiedAt       DateTime?
+  
+  @@index([city])
+  @@index([rating])
+  @@index([isFeatured])
+  @@index([isVerified])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  // Relations
+  vendors     VendorCategory[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VendorCategory {
+  id         String   @id @default(cuid())
+  vendorId   String
+  categoryId String
+  vendor     Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([vendorId, categoryId])
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       String
+  originalPrice String?
+  features    String   @default("[]") // JSON string array
+  isPopular   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  
+  // Relations
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Addon {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       String
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  bookingAddons BookingAddon[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5
+  comment     String?
+  images      String   @default("[]") // JSON string array
+  
+  // Relations
+  userId      String
+  vendorId    String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, vendorId])
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  status      String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED, REJECTED
+  date        DateTime
+  time        String?
+  guests      Int?
+  totalAmount Float?
+  notes       String?
+  
+  // Relations
+  userId      String
+  vendorId    String
+  packageId   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  package     Package? @relation(fields: [packageId], references: [id])
+  
+  // Addons (many-to-many)
+  bookingAddons BookingAddon[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model BookingAddon {
+  id        String  @id @default(cuid())
+  bookingId String
+  addonId   String
+  quantity  Int     @default(1)
+  
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addon     Addon   @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  
+  @@unique([bookingId, addonId])
+}
+
+model Wishlist {
+  id        String  @id @default(cuid())
+  userId    String
+  vendorId  String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, vendorId])
+}
+
+model Chat {
+  id          String   @id @default(cuid())
+  userId      String
+  vendorId    String
+  lastMessage String?
+  lastMessageAt DateTime?
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, vendorId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String   // userId or vendorId
+  isVendor  Boolean  @default(false)
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [senderId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([chatId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR, BOOKING, MESSAGE
+  isRead    Boolean  @default(false)
+  link      String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, isRead])
+}
