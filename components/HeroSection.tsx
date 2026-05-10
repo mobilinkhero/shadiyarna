@@ -1,124 +1,134 @@
-import { Search, Calendar, MapPin, Users } from 'lucide-react'
+'use client'
+
+import { Search, MapPin, ChevronRight, Star, Shield, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+const popularSearches = ['Venues', 'Photography', 'Catering', 'Makeup', 'Decor']
 
 export default function HeroSection() {
+    const router = useRouter()
+    const [search, setSearch] = useState('')
+    const [city, setCity] = useState('')
+
+    function handleSearch(e: React.FormEvent) {
+        e.preventDefault()
+        const params = new URLSearchParams()
+        if (search) params.set('search', search)
+        if (city) params.set('city', city)
+        router.push(`/vendors?${params.toString()}`)
+    }
+
     return (
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-amber-50">
-            <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-            <div className="container relative mx-auto px-4 py-16 md:py-24">
-                <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-                    {/* Left content */}
-                    <div className="flex flex-col justify-center">
-                        <div className="mb-6 inline-flex items-center rounded-full bg-amber-100 px-4 py-2">
-                            <span className="text-sm font-medium text-amber-800">
-                                🎉 Trusted by over 5,000+ couples
-                            </span>
-                        </div>
-                        <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
-                            Plan Your Perfect{' '}
-                            <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
-                                Wedding
-                            </span>{' '}
-                            with Ease
-                        </h1>
-                        <p className="mb-8 text-lg text-gray-600 md:text-xl">
-                            Discover the best wedding vendors, venues, and services all in one place.
-                            From photography to catering, we help you create unforgettable memories.
-                        </p>
+        <section className="relative min-h-[92vh] overflow-hidden bg-[#0a0a0a]">
+            {/* Background image with overlay */}
+            <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=80')" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
 
-                        {/* Search bar */}
-                        <div className="mb-8 rounded-2xl bg-white p-2 shadow-lg">
-                            <div className="flex flex-col gap-4 md:flex-row">
-                                <div className="flex-1">
-                                    <div className="flex items-center rounded-lg border border-gray-200 px-4 py-3">
-                                        <Search className="mr-3 h-5 w-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search for vendors, venues, services..."
-                                            className="w-full border-none bg-transparent outline-none placeholder:text-gray-400"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center rounded-lg border border-gray-200 px-4 py-3">
-                                        <MapPin className="mr-3 h-5 w-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Location (e.g., Karachi, Lahore)"
-                                            className="w-full border-none bg-transparent outline-none placeholder:text-gray-400"
-                                        />
-                                    </div>
-                                </div>
-                                <button className="rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white hover:bg-amber-700">
-                                    Search
-                                </button>
-                            </div>
-                        </div>
+            {/* Decorative elements */}
+            <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
+            <div className="absolute bottom-20 right-10 h-96 w-96 rounded-full bg-rose-500/10 blur-3xl" />
 
-                        {/* Stats */}
-                        <div className="flex flex-wrap gap-6">
-                            <div className="flex items-center">
-                                <div className="mr-3 rounded-lg bg-amber-100 p-2">
-                                    <Calendar className="h-6 w-6 text-amber-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-gray-900">10,000+</p>
-                                    <p className="text-sm text-gray-600">Weddings Planned</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="mr-3 rounded-lg bg-amber-100 p-2">
-                                    <Users className="h-6 w-6 text-amber-600" />
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-gray-900">2,500+</p>
-                                    <p className="text-sm text-gray-600">Verified Vendors</p>
-                                </div>
-                            </div>
-                        </div>
+            <div className="relative container mx-auto px-4 py-24 md:py-36">
+                <div className="mx-auto max-w-4xl text-center">
+                    {/* Badge */}
+                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 backdrop-blur-sm">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-medium text-amber-300">Pakistan&apos;s #1 Wedding Planning Platform</span>
                     </div>
 
-                    {/* Right image/illustration */}
-                    <div className="relative">
-                        <div className="relative h-full min-h-[400px] overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-2xl">
-                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-10"></div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    {/* Heading */}
+                    <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">
+                        Your Dream Wedding{' '}
+                        <span className="bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">
+                            Starts Here
+                        </span>
+                    </h1>
 
-                            {/* Floating cards */}
-                            <div className="absolute left-6 top-6 rounded-2xl bg-white/90 p-4 shadow-xl backdrop-blur-sm">
-                                <div className="flex items-center">
-                                    <div className="mr-3 rounded-full bg-green-100 p-2">
-                                        <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Available Today</p>
-                                        <p className="text-sm text-gray-600">15+ photographers</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <p className="mb-10 text-lg text-gray-300 md:text-xl">
+                        Discover verified vendors, compare packages, and book everything for your perfect day — all in one place.
+                    </p>
 
-                            <div className="absolute bottom-6 right-6 rounded-2xl bg-white/90 p-4 shadow-xl backdrop-blur-sm">
-                                <div className="flex items-center">
-                                    <div className="mr-3 rounded-full bg-blue-100 p-2">
-                                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Top Rated</p>
-                                        <p className="text-sm text-gray-600">4.8/5 average rating</p>
-                                    </div>
-                                </div>
+                    {/* Search box */}
+                    <form onSubmit={handleSearch} className="mx-auto mb-6 max-w-3xl">
+                        <div className="flex flex-col gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur-md sm:flex-row">
+                            <div className="flex flex-1 items-center gap-3 rounded-xl bg-white px-4 py-3">
+                                <Search className="h-5 w-5 shrink-0 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    placeholder="Venues, photographers, caterers..."
+                                    className="w-full bg-transparent text-gray-900 placeholder-gray-400 outline-none"
+                                />
                             </div>
-
-                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                                <div className="rounded-2xl bg-white/20 p-6 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold text-white">Your Dream Wedding</p>
-                                    <p className="text-amber-100">Starts Here</p>
-                                </div>
+                            <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 sm:w-48">
+                                <MapPin className="h-5 w-5 shrink-0 text-gray-400" />
+                                <select
+                                    value={city}
+                                    onChange={e => setCity(e.target.value)}
+                                    className="w-full bg-transparent text-gray-700 outline-none"
+                                >
+                                    <option value="">All Cities</option>
+                                    <option>Karachi</option>
+                                    <option>Lahore</option>
+                                    <option>Islamabad</option>
+                                    <option>Rawalpindi</option>
+                                    <option>Faisalabad</option>
+                                    <option>Multan</option>
+                                </select>
                             </div>
+                            <button
+                                type="submit"
+                                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3 font-semibold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-amber-500/25"
+                            >
+                                Search
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
+                    </form>
+
+                    {/* Popular searches */}
+                    <div className="mb-16 flex flex-wrap items-center justify-center gap-2">
+                        <span className="text-sm text-gray-400">Popular:</span>
+                        {popularSearches.map(term => (
+                            <Link
+                                key={term}
+                                href={`/vendors?search=${term}`}
+                                className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                            >
+                                {term}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 md:gap-8">
+                        {[
+                            { icon: Shield, value: '2,500+', label: 'Verified Vendors' },
+                            { icon: Star, value: '10,000+', label: 'Happy Couples' },
+                            { icon: Clock, value: '4.8/5', label: 'Average Rating' },
+                        ].map(({ icon: Icon, value, label }) => (
+                            <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm md:p-6">
+                                <Icon className="mx-auto mb-2 h-6 w-6 text-amber-400" />
+                                <p className="text-2xl font-bold text-white md:text-3xl">{value}</p>
+                                <p className="text-sm text-gray-400">{label}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Bottom wave */}
+            <div className="absolute bottom-0 left-0 right-0">
+                <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 60L1440 60L1440 0C1440 0 1080 60 720 60C360 60 0 0 0 0L0 60Z" fill="#f9fafb" />
+                </svg>
+            </div>
+        </section>
     )
 }

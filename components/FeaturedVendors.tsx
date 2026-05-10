@@ -1,157 +1,124 @@
-import { Star, MapPin, Users, Award } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
+import { Star, MapPin, CheckCircle, ArrowRight, Zap } from 'lucide-react'
 import Link from 'next/link'
 
-const featuredVendors = [
-    {
-        id: 1,
-        name: 'Elegant Weddings',
-        category: 'Wedding Planner',
-        rating: 4.9,
-        reviewCount: 128,
-        location: 'Karachi',
-        price: 'PKR 150,000+',
-        image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: true
-    },
-    {
-        id: 2,
-        name: 'Golden Moments Photography',
-        category: 'Photographer',
-        rating: 4.8,
-        reviewCount: 89,
-        location: 'Lahore',
-        price: 'PKR 80,000+',
-        image: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: true
-    },
-    {
-        id: 3,
-        name: 'Royal Catering',
-        category: 'Catering Service',
-        rating: 4.7,
-        reviewCount: 156,
-        location: 'Islamabad',
-        price: 'PKR 200,000+',
-        image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: false
-    },
-    {
-        id: 4,
-        name: 'Blissful Decor',
-        category: 'Decor & Flowers',
-        rating: 4.9,
-        reviewCount: 67,
-        location: 'Karachi',
-        price: 'PKR 120,000+',
-        image: 'https://images.unsplash.com/photo-1465495976277-4387d4b0e4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: true
-    },
-    {
-        id: 5,
-        name: 'Melody Band',
-        category: 'Entertainment',
-        rating: 4.6,
-        reviewCount: 45,
-        location: 'Lahore',
-        price: 'PKR 90,000+',
-        image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: false
-    },
-    {
-        id: 6,
-        name: 'Glamour Studio',
-        category: 'Makeup & Hair',
-        rating: 4.8,
-        reviewCount: 92,
-        location: 'Islamabad',
-        price: 'PKR 50,000+',
-        image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        featured: true
-    }
-]
+function safeJsonParse<T>(v: string, fb: T): T {
+    try { return JSON.parse(v) as T } catch { return fb }
+}
 
-export default function FeaturedVendors() {
+export default async function FeaturedVendors() {
+    const vendors = await prisma.vendor.findMany({
+        where: { isFeatured: true },
+        take: 6,
+        include: {
+            categories: { include: { category: true } },
+            _count: { select: { reviews: true } },
+        },
+        orderBy: [{ rating: 'desc' }, { totalReviews: 'desc' }],
+    })
+
+    // Fallback static data if DB is empty
+    const staticVendors = [
+        { id: 's1', name: 'Royal Palm Hall', slug: 'royal-palm-hall', city: 'Karachi', rating: 4.9, totalReviews: 124, priceRange: 'PKR 450,000+', imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=80', isVerified: true, respondsQuickly: true, categories: [{ category: { name: 'Venue' } }], _count: { reviews: 124 } },
+        { id: 's2', name: 'Dreamy Clicks Photography', slug: 'dreamy-clicks', city: 'Lahore', rating: 4.9, totalReviews: 203, priceRange: 'PKR 120,000+', imageUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80', isVerified: true, respondsQuickly: true, categories: [{ category: { name: 'Photography' } }], _count: { reviews: 203 } },
+        { id: 's3', name: 'Zafran Catering', slug: 'zafran-catering', city: 'Islamabad', rating: 4.7, totalReviews: 87, priceRange: 'PKR 200,000+', imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=600&q=80', isVerified: true, respondsQuickly: false, categories: [{ category: { name: 'Catering' } }], _count: { reviews: 87 } },
+        { id: 's4', name: 'Glam by Sana', slug: 'glam-by-sana', city: 'Karachi', rating: 4.8, totalReviews: 112, priceRange: 'PKR 80,000+', imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&q=80', isVerified: true, respondsQuickly: true, categories: [{ category: { name: 'Makeup & Hair' } }], _count: { reviews: 112 } },
+        { id: 's5', name: 'Floral Dreams Decor', slug: 'floral-dreams', city: 'Lahore', rating: 4.8, totalReviews: 76, priceRange: 'PKR 150,000+', imageUrl: 'https://images.unsplash.com/photo-1478146059778-26028b07395a?w=600&q=80', isVerified: true, respondsQuickly: false, categories: [{ category: { name: 'Decor' } }], _count: { reviews: 76 } },
+        { id: 's6', name: 'Melody Strings Band', slug: 'melody-strings', city: 'Islamabad', rating: 4.6, totalReviews: 65, priceRange: 'PKR 90,000+', imageUrl: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&q=80', isVerified: false, respondsQuickly: true, categories: [{ category: { name: 'Entertainment' } }], _count: { reviews: 65 } },
+    ]
+
+    const displayVendors = vendors.length > 0 ? vendors.map(v => ({
+        ...v,
+        slug: v.slug,
+        imageUrl: (safeJsonParse<string[]>(v.gallery, [])[0]) || v.imageUrl,
+    })) : staticVendors
+
     return (
-        <section className="py-16">
+        <section className="bg-gray-50 py-20">
             <div className="container mx-auto px-4">
-                <div className="mb-12 text-center">
-                    <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
-                        Featured Wedding Vendors
-                    </h2>
-                    <p className="mx-auto max-w-2xl text-lg text-gray-600">
-                        Discover top-rated wedding vendors trusted by thousands of couples
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    {featuredVendors.map((vendor) => (
-                        <div
-                            key={vendor.id}
-                            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-xl"
-                        >
-                            <div className="relative h-48 overflow-hidden">
-                                <img
-                                    src={vendor.image}
-                                    alt={vendor.name}
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                                {vendor.featured && (
-                                    <div className="absolute left-4 top-4 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white">
-                                        Featured
-                                    </div>
-                                )}
-                                <div className="absolute bottom-4 right-4 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-gray-900 backdrop-blur-sm">
-                                    {vendor.price}
-                                </div>
-                            </div>
-
-                            <div className="p-6">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-gray-900">{vendor.name}</h3>
-                                        <p className="text-gray-600">{vendor.category}</p>
-                                    </div>
-                                    <div className="flex items-center rounded-full bg-amber-50 px-3 py-1">
-                                        <Star className="mr-1 h-4 w-4 fill-amber-500 text-amber-500" />
-                                        <span className="font-semibold text-gray-900">{vendor.rating}</span>
-                                        <span className="ml-1 text-sm text-gray-600">({vendor.reviewCount})</span>
-                                    </div>
-                                </div>
-
-                                <div className="mb-6 space-y-2">
-                                    <div className="flex items-center text-gray-600">
-                                        <MapPin className="mr-2 h-4 w-4" />
-                                        <span>{vendor.location}</span>
-                                    </div>
-                                    <div className="flex items-center text-gray-600">
-                                        <Users className="mr-2 h-4 w-4" />
-                                        <span>Available for booking</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <button className="rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700">
-                                        View Details
-                                    </button>
-                                    <button className="rounded-lg border border-amber-600 px-4 py-2 font-medium text-amber-600 hover:bg-amber-50">
-                                        Contact
-                                    </button>
-                                </div>
-                            </div>
+                <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1">
+                            <Zap className="h-3.5 w-3.5 text-amber-600" />
+                            <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">Top Picks</span>
                         </div>
-                    ))}
+                        <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">Featured Vendors</h2>
+                        <p className="mt-2 text-gray-500">Handpicked, verified, and loved by couples across Pakistan</p>
+                    </div>
+                    <Link href="/vendors" className="flex items-center gap-1 text-sm font-semibold text-amber-600 hover:text-amber-700">
+                        View all vendors <ArrowRight className="h-4 w-4" />
+                    </Link>
                 </div>
 
-                <div className="mt-12 text-center">
-                    <Link
-                        href="/vendors"
-                        className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                        View All Vendors
-                        <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </Link>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {displayVendors.map((vendor) => (
+                        <Link
+                            key={vendor.id}
+                            href={`/vendors/${vendor.slug}`}
+                            className="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-amber-200"
+                        >
+                            {/* Image */}
+                            <div className="relative h-52 overflow-hidden">
+                                <img
+                                    src={vendor.imageUrl}
+                                    alt={vendor.name}
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+
+                                {/* Badges */}
+                                <div className="absolute left-3 top-3 flex gap-2">
+                                    {vendor.isVerified && (
+                                        <span className="flex items-center gap-1 rounded-full bg-blue-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+                                            <CheckCircle className="h-3 w-3" /> Verified
+                                        </span>
+                                    )}
+                                    {vendor.respondsQuickly && (
+                                        <span className="flex items-center gap-1 rounded-full bg-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+                                            <Zap className="h-3 w-3" /> Quick Reply
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Price */}
+                                {vendor.priceRange && (
+                                    <span className="absolute bottom-3 right-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-gray-900 shadow backdrop-blur-sm">
+                                        {vendor.priceRange}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-5">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <h3 className="truncate font-bold text-gray-900 transition-colors group-hover:text-amber-600">
+                                            {vendor.name}
+                                        </h3>
+                                        <p className="text-sm text-gray-500">
+                                            {vendor.categories[0]?.category.name ?? 'Vendor'}
+                                        </p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1.5">
+                                        <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                                        <span className="text-sm font-bold text-gray-900">{vendor.rating.toFixed(1)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span>{vendor.city}</span>
+                                        <span className="mx-1 text-gray-300">·</span>
+                                        <span>{vendor._count.reviews} reviews</span>
+                                    </div>
+                                    <span className="text-xs font-medium text-amber-600 opacity-0 transition-opacity group-hover:opacity-100">
+                                        View details →
+                                    </span>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
             </div>
         </section>
