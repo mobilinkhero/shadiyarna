@@ -1,60 +1,48 @@
 @import "tailwindcss";
 
 :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 255, 255, 255;
-    --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --foreground-rgb: 255, 255, 255;
-        --background-start-rgb: 0, 0, 0;
-        --background-end-rgb: 0, 0, 0;
-    }
+    --primary: #B8860B;
+    --primary-light: #D4A017;
+    --primary-soft: #FFF8EE;
+    --accent: #E91E8C;
+    --accent-soft: #FFF0F8;
+    --background: #FAFAFA;
+    --surface: #FFFFFF;
+    --text-dark: #1A1A1A;
+    --text-medium: #4A4A4A;
+    --text-grey: #8E8E8E;
+    --text-light: #BDBDBD;
+    --border: #F0F0F0;
+    --divider: #F5F5F5;
+    --confirmed: #34C759;
+    --pending: #FF9500;
 }
 
 body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(to bottom,
-            transparent,
-            rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+    color: var(--text-dark);
+    background: var(--background);
+    font-family: 'Inter', sans-serif;
 }
 
-@layer utilities {
-    .text-balance {
-        text-wrap: balance;
-    }
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+*:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+::selection { background-color: #D4A01733; }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
+/* Carousel dots */
+.carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: all 0.3s; }
+.carousel-dot.active { width: 20px; border-radius: 3px; background: white; }
 
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
+/* Shimmer animation */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* Custom focus styles */
-*:focus {
-    outline: 2px solid #f59e0b;
-    outline-offset: 2px;
-}
-
-/* Custom selection */
-::selection {
-    background-color: #fbbf24;
-    color: #000;
+.shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
 }
