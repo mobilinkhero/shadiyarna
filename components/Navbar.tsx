@@ -38,20 +38,6 @@ export default function Navbar() {
                         <span className="text-lg font-bold tracking-tight text-gray-900">Shadiyarana</span>
                     </Link>
 
-                    {/* Search — desktop */}
-                    <form onSubmit={handleSearch} className="hidden flex-1 max-w-md md:flex">
-                        <div className="flex w-full items-center gap-2 rounded-xl border border-[#EBEBEB] bg-[#F8F7F4] px-4 py-2.5 focus-within:border-[#B8860B] focus-within:bg-white transition-colors">
-                            <Search className="h-4 w-4 shrink-0 text-gray-400" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                placeholder="Search venues, photographers, caterers..."
-                                className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none"
-                            />
-                        </div>
-                    </form>
-
                     {/* Nav — desktop */}
                     <nav className="hidden items-center gap-1 lg:flex">
                         <Link href="/vendors" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-[#B8860B] transition-colors">
