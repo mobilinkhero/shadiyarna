@@ -3,7 +3,7 @@
 import {
     LayoutDashboard, Users, Building2, Tag, Calendar, Star,
     BarChart3, Settings, LogOut, Menu, X, Bell, Search,
-    ChevronDown, User, HelpCircle, Plus
+    ChevronDown, User, HelpCircle, Plus, FileText, MessageSquare, Send
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -18,13 +18,26 @@ const navSections = [
         ],
     },
     {
-        label: 'Manage',
+        label: 'Catalog',
         items: [
             { name: 'Vendors', href: '/admin/vendors', icon: Building2 },
             { name: 'Categories', href: '/admin/categories', icon: Tag },
+        ],
+    },
+    {
+        label: 'Customers',
+        items: [
             { name: 'Users', href: '/admin/users', icon: Users },
             { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
             { name: 'Reviews', href: '/admin/reviews', icon: Star },
+            { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
+        ],
+    },
+    {
+        label: 'Content',
+        items: [
+            { name: 'Blog', href: '/admin/blog', icon: FileText },
+            { name: 'Notifications', href: '/admin/notifications', icon: Send },
         ],
     },
     {

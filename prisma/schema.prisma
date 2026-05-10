@@ -96,12 +96,39 @@ model Category {
   imageUrl    String?
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
-  
+
+  // Subcategory support (self-referential)
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryHierarchy")
+
   // Relations
   vendors     VendorCategory[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([parentId])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  tags        String   @default("[]") // JSON string array
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  authorId    String?
+  authorName  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
 }
 
 model VendorCategory {

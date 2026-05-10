@@ -1,83 +1,113 @@
-import { prisma } from '@/lib/prisma'
-import { Star } from 'lucide-react'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Star, Trash2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/admin/PageHeader'
+import ConfirmDelete from '@/components/admin/ConfirmDelete'
 
-interface SearchParams { page?: string }
+interface Review {
+    id: string; rating: number; comment?: string | null; createdAt: string
+    user: { id: string; name?: string | null; phone: string }
+    vendor: { id: string; name: string; slug: string; imageUrl: string }
+}
 
-export default async function AdminReviewsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-    const sp = await searchParams
-    const page = Math.max(1, parseInt(sp.page || '1'))
-    const limit = 20
-    const skip = (page - 1) * limit
+function getToken() {
+    return typeof document !== 'undefined' ? document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1] ?? '' : ''
+}
 
-    const [total, reviews] = await Promise.all([
-        prisma.review.count(),
-        prisma.review.findMany({
-            skip, take: limit,
-            include: {
-                user: { select: { id: true, name: true, phone: true } },
-                vendor: { select: { id: true, name: true, slug: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-        }),
-    ])
+export default function AdminReviewsPage() {
+    const [reviews, setReviews] = useState<Review[]>([])
+    const [loading, setLoading] = useState(true)
+    const [deleting, setDeleting] = useState<Review | null>(null)
 
-    const totalPages = Math.ceil(total / limit)
+    async function load() {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/admin/reviews', { headers: { Authorization: `Bearer ${getToken()}` } })
+            const json = await res.json()
+            if (json.success) setReviews(json.data)
+        } finally { setLoading(false) }
+    }
+
+    useEffect(() => { load() }, [])
+
+    async function handleDelete(review: Review) {
+        await fetch(`/api/admin/reviews/${review.id}`, {
+            method: 'DELETE', headers: { Authorization: `Bearer ${getToken()}` },
+        })
+        load()
+    }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Reviews</h1>
-                <p className="text-gray-600">{total} total reviews</p>
-            </div>
+        <div>
+            <PageHeader title="Reviews" description={`${reviews.length} customer reviews`} />
 
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <table className="min-w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            {['User', 'Vendor', 'Rating', 'Comment', 'Date'].map(h => (
-                                <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{h}</th>
+                            {['User', 'Vendor', 'Rating', 'Comment', 'Date', ''].map(h => (
+                                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">{h}</th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {reviews.map((r) => (
+                    <tbody className="divide-y divide-gray-100">
+                        {loading ? (
+                            <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">Loading...</td></tr>
+                        ) : reviews.length === 0 ? (
+                            <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">No reviews yet</td></tr>
+                        ) : reviews.map(r => (
                             <tr key={r.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-4">
-                                    <p className="text-sm font-medium text-gray-900">{r.user.name ?? '—'}</p>
-                                    <p className="text-xs text-gray-500">{r.user.phone}</p>
+                                <td className="whitespace-nowrap px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-400 text-xs font-bold text-white">
+                                            {(r.user.name ?? r.user.phone)[0].toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">{r.user.name ?? '—'}</p>
+                                            <p className="text-xs text-gray-500">{r.user.phone}</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td className="px-4 py-4">
-                                    <Link href={`/vendors/${r.vendor.slug}`} target="_blank" className="text-sm font-medium text-blue-600 hover:underline">
-                                        {r.vendor.name}
+                                <td className="whitespace-nowrap px-4 py-3">
+                                    <Link href={`/vendors/${r.vendor.slug}`} target="_blank" className="inline-flex items-center gap-2 hover:underline">
+                                        <img src={r.vendor.imageUrl} alt="" className="h-7 w-7 rounded-lg object-cover" />
+                                        <span className="text-sm font-medium text-gray-900">{r.vendor.name}</span>
+                                        <ExternalLink className="h-3 w-3 text-gray-400" />
                                     </Link>
                                 </td>
-                                <td className="px-4 py-4">
-                                    <div className="flex items-center gap-1">
+                                <td className="whitespace-nowrap px-4 py-3">
+                                    <div className="flex items-center gap-0.5">
                                         {[...Array(5)].map((_, i) => (
-                                            <Star key={i} className={`h-4 w-4 ${i < r.rating ? 'fill-amber-500 text-amber-500' : 'fill-gray-200 text-gray-200'}`} />
+                                            <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} />
                                         ))}
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 max-w-xs">
-                                    <p className="text-sm text-gray-600 truncate">{r.comment ?? '—'}</p>
+                                <td className="px-4 py-3 max-w-md">
+                                    <p className="truncate text-sm text-gray-600">{r.comment ?? '—'}</p>
                                 </td>
-                                <td className="px-4 py-4 text-sm text-gray-500">
+                                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                     {new Date(r.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3 text-right">
+                                    <button onClick={() => setDeleting(r)}
+                                        className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Delete">
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                {reviews.length === 0 && <div className="py-12 text-center text-sm text-gray-500">No reviews yet.</div>}
             </div>
 
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2">
-                    {page > 1 && <Link href={`?page=${page - 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">Previous</Link>}
-                    <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
-                    {page < totalPages && <Link href={`?page=${page + 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">Next</Link>}
-                </div>
+            {deleting && (
+                <ConfirmDelete open={true} onClose={() => setDeleting(null)}
+                    onConfirm={async () => { await handleDelete(deleting) }}
+                    title="Delete review"
+                    message={`Delete this review for "${deleting.vendor.name}"? The vendor's rating will be recalculated.`}
+                />
             )}
         </div>
     )

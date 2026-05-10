@@ -1,121 +1,265 @@
-import { prisma } from '@/lib/prisma'
-import { User, CheckCircle, XCircle } from 'lucide-react'
-import Link from 'next/link'
+'use client'
 
-interface SearchParams { page?: string; search?: string; role?: string }
+import { useEffect, useState } from 'react'
+import { Edit, Trash2, Search, Filter } from 'lucide-react'
+import PageHeader from '@/components/admin/PageHeader'
+import Modal from '@/components/admin/Modal'
+import ConfirmDelete from '@/components/admin/ConfirmDelete'
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-    const sp = await searchParams
-    const page = Math.max(1, parseInt(sp.page || '1'))
-    const limit = 20
-    const skip = (page - 1) * limit
+interface User {
+    id: string; name?: string | null; email?: string | null; phone: string
+    avatar?: string | null; role: string; isActive: boolean
+    createdAt: string; lastLogin?: string | null
+    _count: { bookings: number; reviews: number }
+}
 
-    const where: Record<string, unknown> = {}
-    if (sp.search) where.OR = [{ name: { contains: sp.search } }, { phone: { contains: sp.search } }, { email: { contains: sp.search } }]
-    if (sp.role) where.role = sp.role
+function getToken() {
+    if (typeof document === 'undefined') return ''
+    return document.cookie.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1] ?? ''
+}
 
-    const [total, users] = await Promise.all([
-        prisma.user.count({ where }),
-        prisma.user.findMany({
-            where, skip, take: limit,
-            select: {
-                id: true, name: true, phone: true, email: true,
-                role: true, isActive: true, createdAt: true, lastLogin: true,
-                _count: { select: { bookings: true, reviews: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-        }),
-    ])
+async function apiFetch(url: string, opts: RequestInit = {}) {
+    const token = getToken()
+    return fetch(url, {
+        ...opts,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(opts.headers ?? {}),
+        },
+    })
+}
 
-    const totalPages = Math.ceil(total / limit)
-    const roleColors: Record<string, string> = {
-        USER: 'bg-gray-100 text-gray-700',
-        VENDOR: 'bg-blue-100 text-blue-700',
-        ADMIN: 'bg-purple-100 text-purple-700',
-        SUPER_ADMIN: 'bg-red-100 text-red-700',
+const roleColors: Record<string, string> = {
+    USER: 'bg-gray-50 text-gray-700 ring-gray-200',
+    VENDOR: 'bg-blue-50 text-blue-700 ring-blue-200',
+    ADMIN: 'bg-purple-50 text-purple-700 ring-purple-200',
+    SUPER_ADMIN: 'bg-red-50 text-red-700 ring-red-200',
+}
+
+export default function AdminUsersPage() {
+    const [users, setUsers] = useState<User[]>([])
+    const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
+    const [role, setRole] = useState('')
+    const [editing, setEditing] = useState<User | null>(null)
+    const [deleting, setDeleting] = useState<User | null>(null)
+
+    async function load() {
+        setLoading(true)
+        try {
+            const params = new URLSearchParams()
+            if (search) params.set('search', search)
+            if (role) params.set('role', role)
+            params.set('limit', '100')
+            // use the public API that lists users (since we have admin guard via proxy)
+            const res = await fetch(`/api/admin/users?${params}`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            })
+            if (res.ok) {
+                const json = await res.json()
+                setUsers(json.data ?? [])
+            }
+        } finally { setLoading(false) }
     }
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-                    <p className="text-gray-600">{total} total users</p>
-                </div>
-            </div>
+    useEffect(() => { load() }, [role])
 
-            <div className="flex flex-wrap gap-3 rounded-xl border bg-white p-4 shadow-sm">
-                <form className="flex gap-2">
-                    <input name="search" defaultValue={sp.search} placeholder="Search by name, phone, email…" className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
-                    <select name="role" defaultValue={sp.role || ''} className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none">
-                        <option value="">All Roles</option>
+    async function handleDelete(user: User) {
+        await apiFetch(`/api/admin/users/${user.id}`, { method: 'DELETE' })
+        load()
+    }
+
+    const filtered = users.filter(u => {
+        if (!search) return true
+        const s = search.toLowerCase()
+        return (u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) || u.phone.includes(s))
+    })
+
+    return (
+        <div>
+            <PageHeader title="Users" description={`${users.length} registered users`} />
+
+            {/* Filters */}
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
+                <div className="flex flex-1 items-center gap-2 min-w-[200px]">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, phone, email..."
+                        className="flex-1 bg-transparent text-sm outline-none" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-400" />
+                    <select value={role} onChange={e => setRole(e.target.value)}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none">
+                        <option value="">All roles</option>
                         <option value="USER">User</option>
                         <option value="VENDOR">Vendor</option>
                         <option value="ADMIN">Admin</option>
                         <option value="SUPER_ADMIN">Super Admin</option>
                     </select>
-                    <button type="submit" className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Filter</button>
-                </form>
+                </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
+            {/* Table */}
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <table className="min-w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            {['User', 'Phone', 'Role', 'Bookings', 'Status', 'Joined'].map(h => (
-                                <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{h}</th>
+                            {['User', 'Phone', 'Role', 'Activity', 'Joined', 'Status', ''].map(h => (
+                                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">{h}</th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {users.map((u) => (
+                    <tbody className="divide-y divide-gray-100">
+                        {loading ? (
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">Loading...</td></tr>
+                        ) : filtered.length === 0 ? (
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">No users found</td></tr>
+                        ) : filtered.map(u => (
                             <tr key={u.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-4">
+                                <td className="whitespace-nowrap px-4 py-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-400 text-sm font-bold text-white">
                                             {(u.name ?? u.phone)[0].toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900">{u.name ?? '—'}</p>
+                                            <p className="text-sm font-medium text-gray-900">{u.name ?? '—'}</p>
                                             <p className="text-xs text-gray-500">{u.email ?? ''}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 text-sm text-gray-600">{u.phone}</td>
-                                <td className="px-4 py-4">
-                                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${roleColors[u.role] ?? 'bg-gray-100 text-gray-700'}`}>
+                                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{u.phone}</td>
+                                <td className="whitespace-nowrap px-4 py-3">
+                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${roleColors[u.role] ?? roleColors.USER}`}>
                                         {u.role}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4 text-sm text-gray-600">{u._count.bookings}</td>
-                                <td className="px-4 py-4">
-                                    {u.isActive ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                                            <CheckCircle className="h-3 w-3" /> Active
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                                            <XCircle className="h-3 w-3" /> Inactive
-                                        </span>
-                                    )}
+                                <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">
+                                    {u._count.bookings} bookings · {u._count.reviews} reviews
                                 </td>
-                                <td className="px-4 py-4 text-sm text-gray-500">
+                                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                     {new Date(u.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3">
+                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${
+                                        u.isActive ? 'bg-green-50 text-green-700 ring-green-200' : 'bg-gray-100 text-gray-600 ring-gray-200'
+                                    }`}>
+                                        {u.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3 text-right">
+                                    <div className="flex items-center gap-1">
+                                        <button onClick={() => setEditing(u)} className="rounded-lg p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600" title="Edit">
+                                            <Edit className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => setDeleting(u)} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Delete">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                {users.length === 0 && <div className="py-12 text-center text-sm text-gray-500">No users found.</div>}
             </div>
 
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2">
-                    {page > 1 && <Link href={`?page=${page - 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">Previous</Link>}
-                    <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
-                    {page < totalPages && <Link href={`?page=${page + 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">Next</Link>}
-                </div>
+            {editing && (
+                <UserForm user={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load() }} />
+            )}
+
+            {deleting && (
+                <ConfirmDelete open={true} onClose={() => setDeleting(null)}
+                    onConfirm={async () => { await handleDelete(deleting) }}
+                    title="Delete user"
+                    message={`Delete "${deleting.name ?? deleting.phone}"? All their bookings, reviews and wishlists will be removed.`}
+                />
             )}
         </div>
+    )
+}
+
+function UserForm({ user, onClose, onSaved }: { user: User; onClose: () => void; onSaved: () => void }) {
+    const [form, setForm] = useState({
+        name: user.name ?? '',
+        email: user.email ?? '',
+        phone: user.phone,
+        role: user.role,
+        isActive: user.isActive,
+        password: '',
+    })
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState('')
+
+    async function save() {
+        setSaving(true); setError('')
+        try {
+            const body: Record<string, unknown> = {
+                name: form.name, email: form.email || null,
+                phone: form.phone, role: form.role, isActive: form.isActive,
+            }
+            if (form.password) body.password = form.password
+            const res = await apiFetch(`/api/admin/users/${user.id}`, { method: 'PATCH', body: JSON.stringify(body) })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error || 'Save failed')
+            onSaved()
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Save failed')
+        } finally { setSaving(false) }
+    }
+
+    return (
+        <Modal open={true} onClose={onClose} title="Edit User" maxWidth="md">
+            <div className="space-y-4">
+                <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Name</label>
+                    <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400" />
+                </div>
+                <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400" />
+                </div>
+                <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Phone</label>
+                    <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="mb-1.5 block text-sm font-medium text-gray-700">Role</label>
+                        <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400">
+                            <option value="USER">User</option>
+                            <option value="VENDOR">Vendor</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-sm font-medium text-gray-700">Status</label>
+                        <select value={form.isActive ? 'active' : 'inactive'} onChange={e => setForm({ ...form, isActive: e.target.value === 'active' })}
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">New Password (optional)</label>
+                    <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
+                        placeholder="Leave empty to keep current"
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-gray-400" />
+                </div>
+                {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+                <button onClick={onClose} disabled={saving} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button onClick={save} disabled={saving}
+                    className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60">
+                    {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+            </div>
+        </Modal>
     )
 }
