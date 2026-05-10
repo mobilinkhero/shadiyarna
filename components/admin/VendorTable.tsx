@@ -1,12 +1,14 @@
 'use client'
 
-import { Building2, CheckCircle, XCircle, Star, MoreVertical } from 'lucide-react'
-import { useState } from 'react'
+import { CheckCircle, Clock, Star, Eye } from 'lucide-react'
+import Link from 'next/link'
 
 interface VendorRow {
     id: string
     name: string
+    slug?: string
     city: string
+    imageUrl?: string
     rating: number
     totalReviews: number
     isVerified: boolean
@@ -14,98 +16,64 @@ interface VendorRow {
     _count: { bookings: number; reviews: number }
 }
 
-interface Props {
-    vendors?: VendorRow[]
-}
-
-export default function VendorTable({ vendors = [] }: Props) {
-    const [selectedVendor, setSelectedVendor] = useState<string | null>(null)
-
-    const getStatusBadge = (isVerified: boolean) => {
-        if (isVerified) {
-            return (
-                <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                    <CheckCircle className="mr-1 h-3 w-3" />
-                    Verified
-                </span>
-            )
-        }
-        return (
-            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                <XCircle className="mr-1 h-3 w-3" />
-                Pending
-            </span>
-        )
-    }
-
+export default function VendorTable({ vendors = [] }: { vendors?: VendorRow[] }) {
     if (vendors.length === 0) {
-        return (
-            <div className="py-8 text-center text-sm text-gray-500">
-                No vendors yet. Add your first vendor to get started.
-            </div>
-        )
+        return <div className="py-8 text-center text-sm text-gray-400">No vendors yet</div>
     }
 
     return (
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full">
                 <thead>
-                    <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Vendor</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rating</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                    <tr className="border-b border-gray-100">
+                        {['Vendor', 'Category', 'Rating', 'Status', ''].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">{h}</th>
+                        ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                    {vendors.map((vendor) => (
-                        <tr key={vendor.id} className="hover:bg-gray-50">
-                            <td className="whitespace-nowrap px-4 py-4">
-                                <div className="flex items-center">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                                        <Building2 className="h-5 w-5 text-blue-600" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <div className="text-sm font-medium text-gray-900">{vendor.name}</div>
-                                        <div className="text-sm text-gray-500">
-                                            {vendor.city} · {vendor._count.bookings} bookings
-                                        </div>
+                <tbody className="divide-y divide-gray-100">
+                    {vendors.map(v => (
+                        <tr key={v.id} className="hover:bg-gray-50">
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    {v.imageUrl ? (
+                                        <img src={v.imageUrl} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                                    ) : (
+                                        <div className="h-9 w-9 rounded-lg bg-gray-100" />
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">{v.name}</p>
+                                        <p className="text-xs text-gray-500">{v.city} · {v._count.bookings} bookings</p>
                                     </div>
                                 </div>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-4">
-                                <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800">
-                                    {vendor.categories[0]?.category.name ?? '—'}
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                                    {v.categories[0]?.category.name ?? '—'}
                                 </span>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-4">
-                                <div className="flex items-center">
-                                    <Star className="mr-1 h-4 w-4 fill-current text-amber-500" />
-                                    <span className="text-sm font-medium text-gray-900">{vendor.rating.toFixed(1)}</span>
-                                    <span className="ml-1 text-sm text-gray-500">({vendor.totalReviews})</span>
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <div className="flex items-center gap-1 text-sm">
+                                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                    <span className="font-semibold text-gray-800">{v.rating.toFixed(1)}</span>
+                                    <span className="text-xs text-gray-400">({v.totalReviews})</span>
                                 </div>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-4">
-                                {getStatusBadge(vendor.isVerified)}
+                            <td className="whitespace-nowrap px-4 py-3">
+                                {v.isVerified ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-100">
+                                        <CheckCircle className="h-3 w-3" /> Verified
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-100">
+                                        <Clock className="h-3 w-3" /> Pending
+                                    </span>
+                                )}
                             </td>
-                            <td className="whitespace-nowrap px-4 py-4">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setSelectedVendor(selectedVendor === vendor.id ? null : vendor.id)}
-                                        className="rounded-lg p-1 hover:bg-gray-100"
-                                    >
-                                        <MoreVertical className="h-5 w-5 text-gray-500" />
-                                    </button>
-                                    {selectedVendor === vendor.id && (
-                                        <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border bg-white py-1 shadow-lg">
-                                            <button className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">View Details</button>
-                                            <button className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">Edit Vendor</button>
-                                            <button className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">Verify Vendor</button>
-                                            <button className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100">Delete</button>
-                                        </div>
-                                    )}
-                                </div>
+                            <td className="whitespace-nowrap px-4 py-3">
+                                <Link href={`/admin/vendors/${v.id}`} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                                    <Eye className="h-4 w-4" />
+                                </Link>
                             </td>
                         </tr>
                     ))}

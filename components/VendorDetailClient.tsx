@@ -750,9 +750,16 @@ function BookingModal({ vendor, selectedPkg, onClose }: { vendor: VendorData; se
 
                         <div>
                             <label className="mb-1.5 block text-sm font-semibold text-gray-700">Number of Guests (optional)</label>
-                            <input type="number" value={guests} onChange={e => setGuests(e.target.value)}
-                                placeholder="e.g. 200"
-                                className="w-full rounded-xl border border-[#EBEBEB] px-3 py-2.5 text-sm focus:border-[#B8860B] focus:outline-none" />
+                            <div className="grid grid-cols-3 gap-2">
+                                {['50-100', '100-200', '200-300', '300-500', '500-800', '800+'].map(range => (
+                                    <button key={range} type="button" onClick={() => setGuests(range)}
+                                        className={`rounded-xl py-2 text-sm font-semibold transition-all ${
+                                            guests === range ? 'bg-[#B8860B] text-white' : 'border border-[#EBEBEB] text-gray-600 hover:border-[#B8860B]'
+                                        }`}>
+                                        {range}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div>

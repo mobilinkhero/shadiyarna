@@ -1,135 +1,17 @@
-/* This file contains admin-specific styles */
-/* Tailwind directives should be in the main globals.css file */
+@import "tailwindcss";
 
-/* Custom admin styles */
-.admin-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+:root {
+    --admin-bg: #F9FAFB;
+    --admin-surface: #FFFFFF;
+    --admin-sidebar: #0F172A;
+    --admin-sidebar-text: #CBD5E1;
+    --admin-sidebar-active: #1E293B;
+    --admin-border: #E5E7EB;
+    --admin-accent: #6366F1;
 }
 
-.admin-sidebar {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-}
-
-/* Custom scrollbar for admin */
-.admin-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.admin-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.admin-scrollbar::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-}
-
-.admin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* Table styles for admin */
-.admin-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-.admin-table th {
-    background-color: #f8fafc;
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #475569;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.admin-table td {
-    padding: 12px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.admin-table tr:hover {
-    background-color: #f8fafc;
-}
-
-/* Card styles */
-.admin-card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    padding: 24px;
-}
-
-/* Form styles */
-.admin-input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.admin-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Button styles */
-.admin-btn-primary {
-    background-color: #3b82f6;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-}
-
-.admin-btn-primary:hover {
-    background-color: #2563eb;
-}
-
-.admin-btn-secondary {
-    background-color: #f3f4f6;
-    color: #374151;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    border: 1px solid #d1d5db;
-    cursor: pointer;
-}
-
-.admin-btn-secondary:hover {
-    background-color: #e5e7eb;
-}
-
-/* Status badges */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-badge-success {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-.status-badge-warning {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge-error {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.status-badge-info {
-    background-color: #dbeafe;
-    color: #1e40af;
-}
+body { background: var(--admin-bg); font-family: 'Inter', sans-serif; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }

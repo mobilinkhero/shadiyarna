@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import AdminSidebar from '@/components/admin/AdminSidebar'
-import AdminHeader from '@/components/admin/AdminHeader'
+import AdminShell from '@/components/admin/AdminShell'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -11,23 +10,11 @@ export const metadata: Metadata = {
     description: 'Admin panel for Shadiyarana wedding planning platform',
 }
 
-export default function AdminLayout({
-    children,
-}: {
-    children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={inter.className}>
-                <div className="min-h-screen bg-gray-50">
-                    <AdminHeader />
-                    <div className="flex">
-                        <AdminSidebar />
-                        <main className="flex-1 p-6">
-                            {children}
-                        </main>
-                    </div>
-                </div>
+                <AdminShell>{children}</AdminShell>
             </body>
         </html>
     )
