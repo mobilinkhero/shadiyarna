@@ -6,43 +6,29 @@
     --primary-soft: #FFF8EE;
     --accent: #E91E8C;
     --accent-soft: #FFF0F8;
-    --background: #FAFAFA;
+    --bg: #F8F7F4;
     --surface: #FFFFFF;
     --text-dark: #1A1A1A;
     --text-medium: #4A4A4A;
     --text-grey: #8E8E8E;
     --text-light: #BDBDBD;
-    --border: #F0F0F0;
-    --divider: #F5F5F5;
+    --border: #EBEBEB;
     --confirmed: #34C759;
     --pending: #FF9500;
 }
 
+* { box-sizing: border-box; }
+
 body {
     color: var(--text-dark);
-    background: var(--background);
-    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 *:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-::selection { background-color: #D4A01733; }
-
-/* Carousel dots */
-.carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: all 0.3s; }
-.carousel-dot.active { width: 20px; border-radius: 3px; background: white; }
-
-/* Shimmer animation */
-@keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-.shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-}
+::selection { background: #D4A01730; }
