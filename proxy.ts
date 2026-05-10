@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth'
  * Protects /admin routes — redirects to /login if no valid admin token is present.
  * The token is read from the Authorization header OR a cookie named `token`.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     if (pathname.startsWith('/admin')) {
